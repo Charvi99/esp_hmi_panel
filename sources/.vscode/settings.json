@@ -1,0 +1,16 @@
+{
+    "idf.adapterTargetName": "esp32s2",
+    "idf.portWin": "COM3",
+    "files.associations": {
+        "ui_sensor2.h": "c",
+        "ui_sensor.h": "c",
+        "sensor.h": "c",
+        "ui_support.h": "c",
+        "cjson.h": "c",
+        "ui_main.h": "c"
+    },
+    "idf.openOcdConfigs": [
+        "interface/ftdi/esp32_devkitj_v1.cfg",
+        "target/esp32s2.cfg"
+    ]
+}
