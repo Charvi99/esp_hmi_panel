@@ -31,6 +31,13 @@ void set_item_value_1(int room_index, int item_index, int val)
     ESP_LOGI(TAG, "val is %d ", val);
     room_array[room_index].items[item_index].val = val;
 
+    static char fmt_text[7];
+    sprintf(fmt_text, "%d", (int)val);
+    char *name_cpy = (char *)malloc(sizeof(fmt_text));
+    memcpy(name_cpy, fmt_text, sizeof fmt_text);
+    room_array[room_index].items[item_index].sVal = name_cpy;
+    ESP_LOGE(TAG, "parsovani dat ve stringu: %s", name_cpy);
+
     if (room_array[room_index].items[item_index].type == 0) // LIGHT
     {
         ESP_LOGI(TAG, "Nastavuji svetla: ");
@@ -51,7 +58,7 @@ void set_item_value_1(int room_index, int item_index, int val)
     {
         if (room_array[room_index].items[item_index].val > 0)
         {
-            lv_label_set_text(room_array[room_index].items[item_index].value_label, "ON");
+            lv_label_set_text(room_array[room_index].items[item_index].value_label, room_array[room_index].items[item_index].sVal);
             color_icon(room_array[room_index].items[item_index].img);
         }
         else
@@ -64,7 +71,7 @@ void set_item_value_1(int room_index, int item_index, int val)
     {
         if (room_array[room_index].items[item_index].val > 0)
         {
-            lv_label_set_text(room_array[room_index].items[item_index].value_label, "ON");
+            lv_label_set_text(room_array[room_index].items[item_index].value_label, room_array[room_index].items[item_index].sVal);
             color_icon(room_array[room_index].items[item_index].img);
         }
         else
@@ -77,7 +84,7 @@ void set_item_value_1(int room_index, int item_index, int val)
     {
         if (room_array[room_index].items[item_index].val > 0)
         {
-            lv_label_set_text(room_array[room_index].items[item_index].value_label, "ON");
+            lv_label_set_text(room_array[room_index].items[item_index].value_label, room_array[room_index].items[item_index].sVal);
             color_icon(room_array[room_index].items[item_index].img);
         }
         else
@@ -90,7 +97,7 @@ void set_item_value_1(int room_index, int item_index, int val)
     {
         if (room_array[room_index].items[item_index].val > 0)
         {
-            lv_label_set_text(room_array[room_index].items[item_index].value_label, "ON");
+            lv_label_set_text(room_array[room_index].items[item_index].value_label, room_array[room_index].items[item_index].sVal);
             color_icon(room_array[room_index].items[item_index].img);
         }
         else
@@ -103,20 +110,7 @@ void set_item_value_1(int room_index, int item_index, int val)
     {
         if (room_array[room_index].items[item_index].val > 0)
         {
-            lv_label_set_text(room_array[room_index].items[item_index].value_label, "ON");
-            color_icon(room_array[room_index].items[item_index].img);
-        }
-        else
-        {
-            lv_label_set_text(room_array[room_index].items[item_index].value_label, "OFF");
-            uncolor_icon(room_array[room_index].items[item_index].img);
-        }
-    }
-    else if (room_array[room_index].items[item_index].type == 2) // EXTRA
-    {
-        if (room_array[room_index].items[item_index].val > 0)
-        {
-            lv_label_set_text(room_array[room_index].items[item_index].value_label, "ON");
+            lv_label_set_text(room_array[room_index].items[item_index].value_label, room_array[room_index].items[item_index].sVal);
             color_icon(room_array[room_index].items[item_index].img);
         }
         else
@@ -144,14 +138,12 @@ void change_main_panel_vals(lv_obj_t **light_label, lv_obj_t **socket_label)
     if (active_light_count > 0)
     {
         color_icon(room_array[active_room_index].light_img);
-        ESP_LOGE(TAG, "pocet akt svetel je: %d",active_light_count);
-
+        ESP_LOGE(TAG, "pocet akt svetel je: %d", active_light_count);
     }
     else
     {
         uncolor_icon(room_array[active_room_index].light_img);
         ESP_LOGE(TAG, "pocet akt svetel je 0");
-
     }
     //==========================
     static char fmt_text2[7];
@@ -190,7 +182,7 @@ void change_main_panel_vals_all(lv_obj_t **light_label, lv_obj_t **socket_label)
 
         int subactive_socket_count = 0;
         for (size_t i = 0; i < room_array[j].items_count; i++)
-            if (room_array[j].items[i].val > 0 && room_array[j].items[i].val == TYPE_LIGHT)
+            if (room_array[j].items[i].val > 0 && room_array[j].items[i].val == TYPE_SOCKET)
                 subactive_socket_count += room_array[j].items[i].val;
 
         if (subactive_socket_count > 0)
@@ -248,7 +240,7 @@ void create_room(room_block *newRoom, int width, int height, int xpos, int ypos,
         socket_img = (int)&Socket;
         light_img = (int)&Bulb;
     }
-ESP_LOGW(TAG, "NEW ROOM4");
+    ESP_LOGW(TAG, "NEW ROOM4");
     // draw room cell
     newRoom->panel = draw_panel(page_main->panel_main, width, height, xpos, ypos, event_click_room);
     draw_header(newRoom->panel, &newRoom->header, &newRoom->header_2, newRoom->name, header_font);
@@ -263,16 +255,16 @@ ESP_LOGW(TAG, "NEW ROOM4");
 
     // create parent panel for all items
     newRoom->item_panel = create_def_obj(page_detail->panel_main, lv_obj_get_width(page_detail->panel_main), lv_obj_get_height(page_detail->panel_main), NULL);
-ESP_LOGW(TAG, "NEW ROOM5");
+    ESP_LOGW(TAG, "NEW ROOM5");
     char new_topic[1024];
     snprintf(new_topic, sizeof(new_topic), "%s/%s", MAIN_TOPIC, newRoom->name);
     esp_mqtt_client_subscribe(client, new_topic, 0);
     ESP_LOGI(TAG, "nove odebiram tento topic: %s", new_topic);
 
-ESP_LOGW(TAG, "NEW ROOM6");
+    ESP_LOGW(TAG, "NEW ROOM6");
     cJSON *room_items = cJSON_GetObjectItemCaseSensitive(json, "items");
     generate_items(newRoom->index, room_items);
-ESP_LOGW(TAG, "NEW ROOM7");
+    ESP_LOGW(TAG, "NEW ROOM7");
     ESP_LOGE(TAG, "================================");
 
     return;
@@ -290,8 +282,6 @@ void generate_items(int room_index, cJSON *items)
     int light_current_count = 0;
     int socket_current_count = 0;
     int extra_current_count = 0;
-
-    
 
     ESP_LOGE(TAG, "============= PRVNI PRISTUP K PAMETI.. SPADNE? ===================");
     room_array[room_index].items_count = cJSON_GetArraySize(items);
@@ -484,7 +474,6 @@ void generate_items(int room_index, cJSON *items)
         }
         ESP_LOGE(TAG, "tak mam naalokovano a jdu odebirat");
 
-    
         ESP_LOGE(TAG, "tak mam naalokovano a jdu odebirat toto %s", room_array[room_index].items[i].topic);
         esp_mqtt_client_subscribe(client, room_array[room_index].items[i].topic, 0);
         ESP_LOGI(TAG, "nove odebiram tento topic: %s", room_array[room_index].items[i].topic);

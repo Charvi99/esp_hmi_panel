@@ -1,9 +1,9 @@
 /**
  * @file sensor.c
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2021-01-14
- * 
+ *
  * @copyright Copyright 2021 Espressif Systems (Shanghai) Co. Ltd.
  *
  *      Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@
 
 static float als_val = 0;
 static float temp = 0, humid = 0;
+int init_compleate = 0;
 static mpu6050_acce_value_t acc_val;
 static mpu6050_gyro_value_t gyro_val;
 static ext_io_t io_config = BSP_EXT_IO_DEFAULT_CONFIG();
@@ -68,12 +69,13 @@ esp_err_t sensor_init(void)
 static esp_err_t sensor_task_start(void)
 {
     if (pdPASS != xTaskCreate(
-		(TaskFunction_t)        sensor_task,
-		(const char * const)    "Sensor Task",
-		(const uint32_t)        4 * 1024,
-		(void * const)          NULL,
-		(UBaseType_t)           1,
-		(TaskHandle_t * const)  NULL)) {
+                      (TaskFunction_t)sensor_task,
+                      (const char *const)"Sensor Task",
+                      (const uint32_t)4 * 1024,
+                      (void *const)NULL,
+                      (UBaseType_t)1,
+                      (TaskHandle_t *const)NULL))
+    {
         return ESP_FAIL;
     }
 
@@ -92,10 +94,10 @@ float hdc1080_get_temp(void)
      *  14 Bit  6.35 ms                          *
      * *******************************************/
     vTaskDelay(pdMS_TO_TICKS(10));
-    
+
     hdc1080_get_measure_data(data);
 
-    return (float)((data[0] << 8) + data [1]) / 65535 * 165 - 40;
+    return (float)((data[0] << 8) + data[1]) / 65535 * 165 - 40;
 }
 
 float hdc1080_get_humid(void)
@@ -111,29 +113,50 @@ float hdc1080_get_humid(void)
      *  14 Bit  6.5 ms                           *
      * *******************************************/
     vTaskDelay(pdMS_TO_TICKS(10));
-    
+
     hdc1080_get_measure_data(data);
 
-    return (float)((data[0] << 8) + data [1]) / 65535 * 100;
+    return (float)((data[0] << 8) + data[1]) / 65535 * 100;
 }
 
 static void sensor_task(void *data)
 {
     bh1750_power_on();
 
-    while (1) {
-        /*!< Get MEMS data */
-        mpu6050_get_acce(&acc_val);
-        mpu6050_get_gyro(&gyro_val);
+    while (1)
+    {
+        if (init_compleate != 0)
+        { /*!< Get MEMS data */
+            mpu6050_get_acce(&acc_val);
+            mpu6050_get_gyro(&gyro_val);
 
-        /*!< Get als data */
-        bh1750_get_light_intensity(BH1750_CONTINUE_4LX_RES, &als_val);
+            /*!< Get als data */
+            bh1750_get_light_intensity(BH1750_CONTINUE_4LX_RES, &als_val);
 
-        /*!< Get temp sensor data */
-        temp = hdc1080_get_temp();
-        humid = hdc1080_get_humid();
+            /*!< Get temp sensor data */
+            temp = hdc1080_get_temp();
+            humid = hdc1080_get_humid();
 
-        vTaskDelay(pdMS_TO_TICKS(10));
+            static char fmt_text[7];
+            sprintf(fmt_text, "%d", (int)temp);
+            char *name_cpy = (char *)malloc(sizeof(fmt_text));
+            memcpy(name_cpy, fmt_text, sizeof fmt_text);
+            esp_mqtt_client_publish(client, "house/temp", name_cpy, 0, 1, 0);
+            free(name_cpy);
+
+            sprintf(fmt_text, "%d", (int)humid);
+            name_cpy = (char *)malloc(sizeof(fmt_text));
+            memcpy(name_cpy, fmt_text, sizeof fmt_text);
+            esp_mqtt_client_publish(client, "house/humi", name_cpy, 0, 1, 0);
+            free(name_cpy);
+
+            sprintf(fmt_text, "%d", (int)als_val);
+            name_cpy = (char *)malloc(sizeof(fmt_text));
+            memcpy(name_cpy, fmt_text, sizeof fmt_text);
+            esp_mqtt_client_publish(client, "house/als", name_cpy, 0, 1, 0);
+            free(name_cpy);
+        }
+        vTaskDelay(1500);
     }
 
     vTaskDelete(NULL);

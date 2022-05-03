@@ -121,6 +121,7 @@ typedef struct
 #include "ui_event.h"
 #include "ui_support.h"
 #include "prog_support.h"
+#include "data_simulator.h"
 
 /* Color value defination */
 #define COLOR_BG lv_color_make(0, 241, 245)

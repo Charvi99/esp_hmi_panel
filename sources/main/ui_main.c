@@ -80,6 +80,7 @@ void ui_init(int mqtt_status)
     else if (mqtt_status == -2)
         show_error("WIFI IS CONNECTED\n BUT MQTT IS NOT\n CLICK TO RESTART");
 
+    init_compleate = 1;
     lv_port_sem_give();
 }
 
@@ -123,14 +124,14 @@ void receive_data(char *topic, int topic_len, char *data, int data_len)
         data_parse[i] = data[i];
     data_parse[data_len] = '\0';
 
-    ESP_LOGW(TAG, "==========");
-    ESP_LOGW(TAG, "topic len: %d", topic_len);
-    ESP_LOGW(TAG, "topic parts: %d", topic_part_counter);
-    ESP_LOGW(TAG, "topic parsed: %s", topic_parse);
-    ESP_LOGW(TAG, "==========");
-    ESP_LOGW(TAG, "data len: %d", data_len);
-    ESP_LOGW(TAG, "data parsed: %s", data_parse);
-    ESP_LOGW(TAG, "==========");
+    // ESP_LOGW(TAG, "==========");
+    // ESP_LOGW(TAG, "topic len: %d", topic_len);
+    // ESP_LOGW(TAG, "topic parts: %d", topic_part_counter);
+    // ESP_LOGW(TAG, "topic parsed: %s", topic_parse);
+    // ESP_LOGW(TAG, "==========");
+    // ESP_LOGW(TAG, "data len: %d", data_len);
+    // ESP_LOGW(TAG, "data parsed: %s", data_parse);
+    // ESP_LOGW(TAG, "==========");
 
     /* --- TOPIC CONTAINS ONE PART ADRESS -> new room init  --- */
     if (topic_part_counter == 0)
@@ -174,14 +175,30 @@ void receive_data(char *topic, int topic_len, char *data, int data_len)
             {
                 if (strcmp(topic_parse, room_array[i].items[j].topic) == 0)
                 {
+                    int data = atoi(data_parse);
+                    ESP_LOGE(TAG, "parsovani dat: %d", data);
                     ESP_LOGI(TAG, "V MISTNOSTI: %s BYL STISKNUT ITEM %s", room_array[i].name, room_array[i].items[j].name);
                     if (strcmp(data_parse, room_array[i].items[j].on_cmd))
-                        set_item_value_1(i, j, 0);
+                    {
+                        set_item_value_1(i, j, data);
+                        ESP_LOGE(TAG, "a");
+                    }
                     else if (strcmp(data_parse, room_array[i].items[j].off_cmd))
-                        set_item_value_1(i, j, 1);
+                    {
+                        set_item_value_1(i, j, data);
+                        ESP_LOGE(TAG, "b");
+                    }
                     else if (strcmp(data_parse, room_array[i].items[j].read_cmd))
                     {
                         esp_mqtt_client_publish(client, room_array[i].items[j].topic, room_array[i].items[j].sVal, 0, 1, 0);
+                        ESP_LOGE(TAG, "c");
+                    }
+                    else // set val
+                    {
+                        int data = atoi(data_parse);
+                        ESP_LOGE(TAG, "parsovani dat: %d", data);
+
+                        set_item_value_1(i, j, data);
                     }
                 }
             }

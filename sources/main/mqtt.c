@@ -163,6 +163,10 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
         msg_id = esp_mqtt_client_subscribe(client, MAIN_TOPIC, 0);
         ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
 
+        msg_id = esp_mqtt_client_subscribe(client, "house/temp", 0);
+        msg_id = esp_mqtt_client_subscribe(client, "house/humi", 0);
+        msg_id = esp_mqtt_client_subscribe(client, "house/als", 0);
+
         msg_id = esp_mqtt_client_publish(client, MAIN_TOPIC, "hmi_connected", 0, 1, 0);
         ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
 

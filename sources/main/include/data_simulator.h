@@ -37,9 +37,14 @@
 #include "mpu6050.h"
 #include "tca9554.h"
 
+#include "mqtt.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+extern int init_compleate;
+
 
 /**
  * @brief Initialize sensor
